@@ -1,0 +1,10 @@
+#ifndef CONTANT_H
+#define CONTANT_H
+#include <stddef.h>
+#define FILE_NAME_LENGTH 256
+#define MAX_FILE_COUNT 256
+#define PATTERN_LENGTH 1024
+#define MAX_OPTION_COUNT 3
+#define BUFFER_SIZE 4096 
+#define MAX_ERROR_DESCRIPTION_LENGTH 4096
+#endif
