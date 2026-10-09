@@ -8,5 +8,5 @@ typedef struct {
         m_string *str;
 } line_data;
 
-int collect_lines(char *file, char *pattern, char *option, m_string *output,bool* no_match);
+int collect_lines(char *file, char *pattern, char *option, m_string **output,bool* no_match);
 #endif

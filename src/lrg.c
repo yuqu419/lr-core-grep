@@ -1,8 +1,15 @@
+#include <stdio.h>
+#include <string.h>
+
 #include "error.h"
 #include "mstring.h"
 #include "parse.h"
 #include "search.h"
-#include <stdio.h>
+
+
+
+
+
 int main(int argc, char *argv[]) {
         int ret = SUCCESS;
         char pattern[PATTERN_LENGTH] = {0};
@@ -15,21 +22,30 @@ int main(int argc, char *argv[]) {
         if (ret != SUCCESS) {
                 goto cleanup;
         }
+        bool countable = strchr(options, 'c') != NULL;
         for (int i = 0; i < file_count; i++) {
-
                 char *file = files[i];
-                if (file_count > 1) {
-                        printf("%s\n", file);
-                }
-                ret = collect_lines(file, pattern, options, match, &no_match);
+                ret = collect_lines(file, pattern, options, &match, &no_match);
                 if (ret != SUCCESS) {
+                        if (ret == ERR_FILE_READ || ret == ERR_FILE_OPEN) {
+                                handle_error(ret);
+                                ret = SUCCESS;
+                                exit_code = 2;
+                                continue;
+                        }
                         goto cleanup;
+                }
+                if (file_count > 1) {
+                        printf("%s:", file);
                 }
                 printf("%s", match->data);
                 clear(match);
         }
-        if (no_match)
+        if (no_match && exit_code == 0) {
+                if (countable)
+                        printf("0");
                 exit_code = 1;
+        }
 cleanup:
         if (ret != SUCCESS) {
                 ret = handle_error(ret);

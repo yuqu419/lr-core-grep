@@ -1,8 +1,12 @@
 #include "parse.h"
+#include "constant.h"
 #include "error.h"
+#include <asm-generic/errno-base.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 /*
 调用者应保证参数均合法
 option_receiver容量为MAX_OPTION_COUNT
@@ -51,11 +55,11 @@ static int process_file(const char *file_deliver, char *file_receiver) {
         memcpy(file_receiver, file_deliver, len + 1);
         return SUCCESS;
 }
+
 int parse_args(char **argv, int argc, char *options, char *pattern,
                char (*files)[FILE_NAME_LENGTH], int *file_count) {
         if (!argv || !options || !pattern || !files || !file_count) {
                 exit_code = 2;
-                strcpy(filename, "all");
                 return ERR_BAD_PARAMETER;
         }
 
@@ -78,7 +82,6 @@ int parse_args(char **argv, int argc, char *options, char *pattern,
                         pattern_exist = true;
                 } else {
                         if (*file_count >= MAX_FILE_COUNT) {
-                                strcpy(filename, "all");
                                 exit_code = 2;
                                 return ERR_OUT_OF_MAX_FILE_COUNT;
                         }
@@ -93,6 +96,9 @@ int parse_args(char **argv, int argc, char *options, char *pattern,
                 exit_code = 2;
                 return ERR_NO_PATTERN;
         }
-
+        if ((*file_count) == 0) {
+            strcpy(files[*file_count],"/dev/stdin");
+            (*file_count)++;
+        }
         return SUCCESS;
 }

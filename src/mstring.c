@@ -26,7 +26,7 @@ int push_back(m_string **str, char c) {
         return 0;
 }
 void clear(m_string *str) {
-        memset(str->data, 0, str->capacity);
+        memset(str->data, 0, str->size);
         str->size = 0;
 }
 void update_size(m_string *str) {
@@ -41,6 +41,12 @@ void reserve(m_string **str, size_t cap) {
         if (new_ptr != NULL)
                 (*str) = new_ptr;
         (*str)->capacity = cap;
+}
+void concatenate(m_string **dest, char *src) {
+        size_t size = strlen(src);
+        reserve(dest, (*dest)->size + size);
+        memcpy((*dest)->data + (*dest)->size, src, size);
+        (*dest)->size += size;
 }
 int empty(m_string *str) { return !(str->size); }
 void string_destroy(m_string *str) { free(str); }

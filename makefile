@@ -2,11 +2,11 @@
 CC      = gcc
 CFLAGS  = -g -fsanitize=address -I ./include
 LDFLAGS = -fsanitize=address
-TARGET  = demo
+TARGET  = lrg
 SRCS    = $(wildcard *.c ./src/*.c)          # 自动收集当前目录所有 .c 文件
 OBJS    = $(SRCS:.c=.o)            # utils.c -> utils.o
 HDRS    = $(wildcard *.h)
-PARA 	= -nic n data.txt
+# PARA 	= -nic n data.txt
 # ==================== 默认目标 ====================
 all: $(TARGET)
 

@@ -2,11 +2,12 @@
 #include "constant.h"
 #include "error.h"
 #include "mstring.h"
-#include <limits.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -74,8 +75,8 @@ static int filter_pattern(m_string **line_str, const char *pattern,
 保证line_str为空，且空间足够
 */
 static int sift_line(int fd, char *pattern, m_string **line_str,
-                     int ignore_upper_lower, line_data *match_line,
-                     int *finish,int* line_count) {
+                     int ignore_upper_lower, line_data *match_line, int *finish,
+                     size_t *line_count) {
 
         int res = stream_read(fd, line_str, finish);
         if (res != SUCCESS) {
@@ -89,9 +90,10 @@ static int sift_line(int fd, char *pattern, m_string **line_str,
         return SUCCESS;
 }
 static int update_info(line_data data, m_string **output) {
-        reserve(output, (*output)->size + data.str->size);
-        strcat((*output)->data, data.str->data);
-        update_size((*output));
+        // reserve(output, (*output)->size + data.str->size);
+        // strcat((*output)->data, data.str->data);
+        concatenate(output, data.str->data);
+        // update_size((*output));
         return SUCCESS;
 }
 static int update_info_with_number(line_data data, m_string **output) {
@@ -104,25 +106,38 @@ static int update_info_with_number(line_data data, m_string **output) {
         update_size((*output));
         return SUCCESS;
 }
-static int update_info_count(m_string **output) {
-        static long count = 0;
-        count++;
+static int update_info_count(m_string **output, size_t *count) {
+        (*count)++;
         clear(*output);
         // long最长19位
         char col[20] = {0};
-        sprintf(col, "%lu\n", count);
+        sprintf(col, "%lu\n", *count);
         strcat((*output)->data, col);
         update_size(*output);
         return SUCCESS;
 }
-int collect_lines(char *file, char *pattern, char *option, m_string *output,bool *no_match) {
+// static int output_check(m_string **output, char *option) {
+//         if ((*output)->data[0] == '\0' && strchr(option, 'c') != NULL) {
+//                 push_back(output, '0');
+//                 push_back(output, '\n');
+//         }
+//         return SUCCESS;
+// }
+int collect_lines(char *file, char *pattern, char *option, m_string **output,
+                  bool *no_match) {
+        bool original = true;
+        if ((*output)->data[0] == '\0' && strchr(option, 'i')) {
+                push_back(output, '0');
+                push_back(output, '\n');
+        }
         int ret = SUCCESS;
-        int line_count = 0;
+        size_t line_count = 0;
+        size_t match_count = 0;
         int fd = open(file, O_RDONLY, 0777);
         int finish = 0;
         if (fd == -1) {
                 exit_code = 2;
-                strcpy(filename, "no-such-file");
+                strcpy(filename, file);
                 return ERR_FILE_OPEN;
         }
         m_string *line_str = string_init(BUFFER_SIZE);
@@ -130,23 +145,28 @@ int collect_lines(char *file, char *pattern, char *option, m_string *output,bool
         int ignore_upper_lower = 0;
         if (strchr(option, 'i') != NULL)
                 ignore_upper_lower = true;
-        
         while (true) {
                 int res = sift_line(fd, pattern, &line_str, ignore_upper_lower,
-                                    &data, &finish,&line_count);
+                                    &data, &finish, &line_count);
                 if (res != SUCCESS) {
                         ret = res;
                         goto cleanup;
                 }
                 if (data.str) {
-                        if (strchr(option, 'n') != NULL) {
-                                update_info_with_number(data, &output);
-                        } else {
-                                update_info(data, &output);
+                        if (original) {
+                                clear(*output);
+                                original = false;
                         }
                         if (strchr(option, 'c') != NULL) {
-                                update_info_count(&output);
+                                update_info_count(output, &match_count);
+                        } else {
+                                if (strchr(option, 'n') != NULL) {
+                                        update_info_with_number(data, output);
+                                } else {
+                                        update_info(data, output);
+                                }
                         }
+
                         *no_match = false;
                 }
                 data.str = NULL;
@@ -154,6 +174,7 @@ int collect_lines(char *file, char *pattern, char *option, m_string *output,bool
                 if (finish)
                         break;
         }
+
 cleanup:
         string_destroy(line_str);
         close(fd);

@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -24,7 +25,7 @@ int get_str_by_error(int err, char *err_info) {
                 strcpy(err_info, "Please enter legal pattern");
                 break;
         case -4:
-                strcpy(err_info, "The options only include n,i and c");
+                strcpy(err_info, "usage: lrg [-nic] PATTERN [FILE...]");
                 break;
         case -5:
                 strcpy(err_info, "The length of a file should not beyond 256");
@@ -40,25 +41,31 @@ int get_str_by_error(int err, char *err_info) {
         return 0;
 }
 int handle_error(int err) {
-        char err_str[MAX_ERROR_DESCRIPTION_LENGTH] = {0};
+
+        char err_str[MAX_ERROR_DESCRIPTION_LENGTH*10] = {0};
         if (err == -7 || err == -8) {
                 char *tmp = strerror(errno);
-                strcpy(err_str, tmp);
+                // strcpy(err_str, tmp);
+                sprintf(err_str, "lrg: %s: %s\n",filename,tmp);
+        } else {
+                strcpy(err_str, "usage: lrg [-nic] PATTERN [FILE...]\n");
         }
-        int res = get_str_by_error(err, err_str);
-        int total = strlen(err_str) + 4;
-        char tmp[MAX_ERROR_DESCRIPTION_LENGTH] = {0};
-        strcpy(tmp, err_str);
-        memset(err_str, 0, MAX_ERROR_DESCRIPTION_LENGTH);
-        strcpy(err_str, "lrg:");
-        strcat(strcat(err_str, filename), ":");
-        strcat(strcat(err_str, tmp), "\n");
+        // int res = get_str_by_error(err, err_str);
+        // char tmp[MAX_ERROR_DESCRIPTION_LENGTH] = {0};
+        // strcpy(tmp, err_str);
+        // memset(err_str, 0, MAX_ERROR_DESCRIPTION_LENGTH);
+        // strcpy(err_str, "lrg:");
+        // strcat(strcat(err_str, filename), ":");
+        // strcat(strcat(err_str, tmp), "\n");
+        size_t total = strlen(err_str);
+
         while (true) {
                 ssize_t write_byte = write(STDERR_FILENO, err_str, total + 1);
                 total -= write_byte;
-                if (total <= 0) {
+                if (total <= 0 || write_byte <= 0) {
                         break;
                 }
         }
-        return res;
+        // return res;
+        return SUCCESS;
 }

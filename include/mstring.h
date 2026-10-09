@@ -27,7 +27,7 @@ void string_destroy(m_string* str);
  */
 void reserve(m_string** str,size_t cap);
 int empty(m_string* str);
-
+void concatenate(m_string **dest,char *src);
 void clear(m_string* str);
 #endif
 

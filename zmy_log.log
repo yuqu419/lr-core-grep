@@ -1,0 +1,75 @@
+===== 1. 基本匹配 =====
+PASS: 基本匹配
+PASS: 无匹配退出码1
+PASS: 无匹配 -c 输出0且退出1
+PASS: 模式是字面量(a.c 不解释为正则)
+PASS: 模式 * 也是字面量
+===== 2. -i 忽略大小写 =====
+PASS: -i 匹配
+PASS: -i 模式大写匹配小写
+PASS: -i 匹配 aC
+PASS: 不加 -i 大小写敏感
+===== 3. -n 行号 =====
+PASS: -n 行号
+PASS: -n 单文件无文件名前缀
+PASS: -n stdin 末行无换行也计数
+===== 4. -c 计数 =====
+PASS: -c 单文件
+PASS: -c 忽略 -n
+PASS: -c 多文件带前缀
+PASS: -c stdin
+FAIL: -c 多文件中0匹配的文件也要输出 file:0, 退出1
+  期望: rc=1 out=[sample.log:0
+notes.txt:0] err=[]
+  实际: rc=1 out=[sample.log:notes.txt:0] err=[]
+PASS: -c 坏文件退出2且无计数输出
+===== 5. 选项解析 =====
+PASS: -ni 合并
+PASS: -in 顺序无关
+PASS: -nic 三选项合并(-c 忽略 -n)
+PASS: 非法选项 -x
+PASS: 非法选项 -nix
+PASS: 非法选项 -xn
+PASS: 只有选项无 PATTERN 用法错误
+PASS: 缺 PATTERN 用法错误
+PASS: 只有 -i 无 PATTERN
+===== 6. 多文件前缀 =====
+PASS: 多文件带文件名
+PASS: 多文件+n
+PASS: 文件名按命令行原样输出
+FAIL: 多文件含空文件(空文件0匹配)
+  期望: rc=0 out=[sample.log:boot ok
+sample.log:boot ok again] err=[]
+  实际: rc=0 out=[empty.txt:sample.log:boot ok
+boot ok again] err=[]
+===== 7. stdin 与 - 的处理 =====
+PASS: stdin 无前缀
+PASS: 空 PATTERN 匹配所有行(stdin)
+PASS: 空 PATTERN 匹配所有行(文件,含无换行尾行)
+PASS: 空 PATTERN 匹配空行
+FAIL: 单独的 - 作 PATTERN(字面量匹配)
+  期望: rc=0 out=[a-b] err=[]
+  实际: rc=1 out=[] err=[]
+===== 8. 错误处理与退出码 =====
+PASS: 打开失败继续处理, 退出2
+PASS: 只有坏文件 退出2
+PASS: 多个坏文件逐个报错, 退出2
+FAIL: PATTERN 之后的 -n 按文件名处理(打开失败)
+  期望: rc=2 out=[] err=[lrg: -n: No such file or directory]
+  实际: rc=1 out=[] err=[]
+FAIL: 目录作为 FILE: 读取失败报错, 退出2
+  期望: rc=2 out=[] err=[lrg: a_directory: Is a directory]
+  实际: rc=2 out=[] err=[lrg: no-such-file: Is a directory]
+===== 9. 边界：行尾无换行 =====
+PASS: 最后一行无换行补\n
+PASS: 整个文件单行无换行
+===== 10. 边界：空文件 =====
+PASS: 空文件无匹配
+PASS: 空文件 -c 输出0退出1
+===== 11. 1MiB 超长行（字节比对） =====
+FAIL: 1MiB 超长行 (rc 期望 0 实际 1)
+FAIL: 1MiB 超长行+文件名前缀 (rc 期望 0 实际 1)
+===== 12. 流式处理（可选） =====
+FAIL: 流式处理 (128 MiB 虚拟内存上限下失败)
+
+结果: PASS=40 FAIL=8
