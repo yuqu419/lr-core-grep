@@ -1,33 +1,63 @@
-#ifndef MSTRING_H
-#define MSTRING_H
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
+
 #include <stddef.h>
+#include <stdlib.h>
 
-typedef struct {
-    size_t size;
-    size_t capacity;
-    char data[];
+/*
+整个m_string存储在栈中，会将data声明在堆中中，init申请，destroy释放
+size 代表不包含结尾'\0'的所有字符长度，但字符串严格以'\0'结尾，所以
+要求cap > size
+
+*/
+typedef struct m_string {
+		char *data;
+		size_t size;
+		size_t cap;
 } m_string;
-/*申请一个m_string,申请失败返回空指针
- *传入的cap应在size_t范围之内，超出概不负责
- */
-m_string *string_init(size_t cap);
-/*压入一个字符，空间不足自动扩容，扩容超出size_t范围不负责
- * 
- * 
- */
-int push_back(m_string **str, char c);
-void update_size(m_string *str);
+/*
+调用者应保证str非空
+当cap为0时，会直接返回0
+初始化字符串，为data申请空间，
+将所有字符初始化为0
+成功返回0，失败返回-1
+失败后会设定errno
 
-void string_destroy(m_string* str);
-/*对字符串进行扩容处理
- *应保证cap是大于现有size的，且在size_t范围之内，出错概不负责
- */
-void reserve(m_string** str,size_t cap);
-int empty(m_string* str);
+*/
 
-void clear(m_string* str);
-#endif
+int string_init(m_string *str, size_t cap);
+/*
+调用者应保证str非空
+为str预留cap个空间，不改变现有数据和size
+若cap小于等于cap，则直接返回
 
+*/
+int string_reserve(m_string *str, size_t cap);
+
+/*
+调用者应保证dest和src非空
+将src的len个字符严格拼接至dest之后，dest的末尾零会被覆盖
+拼接后的字符串保证以'\0'结尾
+
+*/
+
+int string_concat(m_string *dest, const char *src, size_t len);
+
+/*
+调用者保证str非空，
+若size = 0,返回1，反则返回1
+如果返回负数，说明出错了
+*/
+int string_empty(m_string *str);
+/*
+调用者保证str非空，
+将全部data置为0
+size置为0，cap大小不变
+*/
+
+int string_clear(m_string *str);
+
+/*
+调用者保证str非空，
+释放data,并置空，size和cap置为0,成功返回0，失败返回-1
+
+*/
+int string_destory(m_string *str);

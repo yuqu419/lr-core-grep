@@ -1,161 +1,153 @@
-#include "search.h"
 #include "constant.h"
 #include "error.h"
-#include "mstring.h"
-#include <limits.h>
-#include <ctype.h>
+#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
-static void to_lower_case(char *str) {
-        if (!str)
-                return;
-        for (int i = 0; str[i] != '\0'; i++) {
-                if (str[i] >= 'A' && str[i] <= 'Z')
-                        str[i] = tolower(str[i]);
-        }
-}
 /*
-调用者应保证参数均有效
-会为每个读取的末尾添加\n
+收集单个文件信息
 */
-static int stream_read(int fd, m_string **line_str, int *finish) {
-        char buf[1] = {0};
-        while (true) {
-                ssize_t read_byte = read(fd, buf, 1);
-                if (read_byte == 0) {
-                        *finish = true;
-                        push_back(line_str, '\n');
-                        return SUCCESS;
-                }
-                if (read_byte == -1) {
-                        if (errno == EINTR)
-                                continue;
-                        exit_code = 2;
-                        strcpy(filename, "no-such-file");
-                        return ERR_FILE_READ;
-                }
-                if (buf[0] == '\n') {
-                        push_back(line_str, '\n');
-                        break;
-                }
-                push_back(line_str, buf[0]);
-        }
-        return SUCCESS;
-}
-/*
-功能：提供单独的一行，找出其是否满足条件
-调用者应保证传参正常
-*/
-static int filter_pattern(m_string **line_str, const char *pattern,
-                          int ignore_upper_lower) {
-        char lower_pattern[strlen(pattern) + 1];
-        char lower_single_line[strlen((*line_str)->data) + 1];
-        strcpy(lower_pattern, pattern);
-        strcpy(lower_single_line, (*line_str)->data);
-        if (ignore_upper_lower) {
-                to_lower_case(lower_pattern);
-                to_lower_case(lower_single_line);
-        }
-        char *res = strstr(lower_single_line, lower_pattern);
+static bool find_pattern(m_string *str, char *pattern) {
+        char *res = strstr(str->data, pattern);
         if (res != NULL) {
                 return true;
         }
         return false;
 }
-
-/*
-调用者保证参数安全可靠
-每次读取一行内容，把去读取到的内容存入match_line内
-保证line_str为空，且空间足够
-*/
-static int sift_line(int fd, char *pattern, m_string **line_str,
-                     int ignore_upper_lower, line_data *match_line,
-                     int *finish,int* line_count) {
-
-        int res = stream_read(fd, line_str, finish);
-        if (res != SUCCESS) {
-                return res;
+static bool find_pattern_ignore(m_string *str, char *pattern) {
+        char *res = strcasestr(str->data, pattern);
+        if (res != NULL) {
+                return true;
         }
-        (*line_count)++;
-        if (filter_pattern(line_str, pattern, ignore_upper_lower)) {
-                *match_line =
-                    (line_data){.str = *line_str, .column = *line_count};
-        }
-        return SUCCESS;
+        return false;
 }
-static int update_info(line_data data, m_string **output) {
-        reserve(output, (*output)->size + data.str->size);
-        strcat((*output)->data, data.str->data);
-        update_size((*output));
-        return SUCCESS;
-}
-static int update_info_with_number(line_data data, m_string **output) {
-        char col[20] = {0};
-        sprintf(col, "%lu:", data.column);
-
-        reserve(output, (*output)->size + data.str->size + 20);
-        strcat((*output)->data, col);
-        strcat((*output)->data, data.str->data);
-        update_size((*output));
-        return SUCCESS;
-}
-static int update_info_count(m_string **output) {
-        static long count = 0;
-        count++;
-        clear(*output);
-        // long最长19位
-        char col[20] = {0};
-        sprintf(col, "%lu\n", count);
-        strcat((*output)->data, col);
-        update_size(*output);
-        return SUCCESS;
-}
-int collect_lines(char *file, char *pattern, char *option, m_string *output,bool *no_match) {
-        int ret = SUCCESS;
-        int line_count = 0;
-        int fd = open(file, O_RDONLY, 0777);
-        int finish = 0;
-        if (fd == -1) {
-                exit_code = 2;
-                strcpy(filename, "no-such-file");
-                return ERR_FILE_OPEN;
-        }
-        m_string *line_str = string_init(BUFFER_SIZE);
-        line_data data = (line_data){.str = NULL};
-        int ignore_upper_lower = 0;
-        if (strchr(option, 'i') != NULL)
-                ignore_upper_lower = true;
-        
+void handle_buf(char buf[BUFFER_SIZE], size_t read_byte, size_t *match_count,
+                size_t *match_count_ignore, m_string *single_line,
+                match_line lines[MAX_LINE_COUNT], char *pattern,
+                size_t *line_count) {
+        char *remaining_ptr = buf;
+        size_t remaining_byte = read_byte;
         while (true) {
-                int res = sift_line(fd, pattern, &line_str, ignore_upper_lower,
-                                    &data, &finish,&line_count);
-                if (res != SUCCESS) {
-                        ret = res;
-                        goto cleanup;
-                }
-                if (data.str) {
-                        if (strchr(option, 'n') != NULL) {
-                                update_info_with_number(data, &output);
+                char *ptr = strchr(remaining_ptr, '\n');
+                if (ptr) {
+                        (*line_count)++;
+                        string_concat(single_line, remaining_ptr,
+                                      ptr - remaining_ptr);
+                        if (find_pattern(single_line, pattern)) {
+                                string_concat(
+                                    &(lines[*match_count_ignore].content),
+                                    single_line->data, single_line->size);
+                                lines[*match_count_ignore].number = *line_count;
+                                lines[*match_count_ignore].ignorance = false;
+
+                                (*match_count)++;
+                                (*match_count_ignore)++;
                         } else {
-                                update_info(data, &output);
+                                if (find_pattern_ignore(single_line, pattern)) {
+                                        string_concat(
+                                            &(lines[*match_count_ignore]
+                                                  .content),
+                                            single_line->data,
+                                            single_line->size);
+                                        lines[*match_count_ignore].number =
+                                            *line_count;
+                                        lines[*match_count_ignore].ignorance =
+                                            true;
+                                        (*match_count_ignore)++;
+                                }
                         }
-                        if (strchr(option, 'c') != NULL) {
-                                update_info_count(&output);
-                        }
-                        *no_match = false;
+                        string_clear(single_line);
+
+                        remaining_byte -= (ptr - remaining_ptr) + 1;
+                        remaining_ptr = ptr + 1;
                 }
-                data.str = NULL;
-                clear(line_str);
-                if (finish)
+
+                else {
+                        string_concat(single_line, remaining_ptr,
+                                      remaining_byte);
+                        break;
+                }
+                if (remaining_byte <= 0)
                         break;
         }
+}
+int collect_file(char *file, char *pattern, match_line lines[MAX_LINE_COUNT],
+                 size_t *match_count, size_t *match_count_ignore) {
+        int ret = 0;
+        int fd = open(file, O_RDONLY);
+        m_string single_line;
+        string_init(&single_line, BUFFER_SIZE);
+        size_t line_count = 0;
+        if (fd < 0) {
+                report_err(1, file);
+                ret = -1;
+                goto cleanup;
+        }
+        struct stat fd_status;
+        fstat(fd, &fd_status);
+        if (S_ISDIR(fd_status.st_mode)) {
+                errno = EISDIR;
+                report_err(1, file);
+                ret = -1;
+                goto cleanup;
+        }
+        char buf[BUFFER_SIZE] = {0};
+        while (true) {
+                memset(buf, 0, BUFFER_SIZE);
+                ssize_t read_byte = read(fd, buf, BUFFER_SIZE - 1);
+                if (read_byte == 0) {
+                        break;
+                }
+                if (read_byte == -1) {
+                        if (errno == EINTR)
+                                continue;
+                        break;
+                }
+                handle_buf(buf, read_byte, match_count, match_count_ignore,
+                           &single_line, lines, pattern, &line_count);
+        }
+        /*
+        处理当文件不以\n结尾的情况
+        */
+        if (find_pattern(&single_line, pattern)) {
+                string_concat(&(lines[*match_count_ignore].content),
+                              single_line.data, single_line.size);
+                lines[*match_count_ignore].number = ++line_count;
+                lines[*match_count_ignore].ignorance = false;
+                (*match_count)++;
+                (*match_count_ignore)++;
+        } else {
+                if (find_pattern_ignore(&single_line, pattern)) {
+                        string_concat(&(lines[*match_count_ignore].content),
+                                      single_line.data, single_line.size);
+                        lines[*match_count_ignore].number = ++line_count;
+                        lines[*match_count_ignore].ignorance = true;
+                        (*match_count_ignore)++;
+                }
+        }
 cleanup:
-        string_destroy(line_str);
-        close(fd);
+        string_destory(&single_line);
+        return ret;
+}
+/*
+match_counts,
+match_counts_ignore全初始化为0
+*/
+int collect_all(char (*files)[FILE_NAME_SIZE], size_t file_count, char *pattern,
+                match_line (*matches)[MAX_LINE_COUNT],
+                size_t match_counts[file_count],
+                size_t match_counts_ignorace[file_count]) {
+        int ret = 0;
+        for (size_t i = 0; i < file_count; i++) {
+                match_counts[i] = 0;
+                match_counts_ignorace[i] = 0;
+                ret |=
+                    collect_file(files[i], pattern, matches[i],
+                                 match_counts + i, match_counts_ignorace + i);
+        }
         return ret;
 }

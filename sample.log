@@ -1,0 +1,5 @@
+boot ok
+disk full at 03:00
+ERROR: retry later
+boot ok again
+error: give up

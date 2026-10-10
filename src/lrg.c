@@ -1,39 +1,72 @@
-#include "error.h"
-#include "mstring.h"
+#include "arrange.h"
+#include "constant.h"
 #include "parse.h"
 #include "search.h"
+#include <stddef.h>
 #include <stdio.h>
-int main(int argc, char *argv[]) {
-        int ret = SUCCESS;
-        char pattern[PATTERN_LENGTH] = {0};
-        char options[MAX_OPTION_COUNT] = {0};
-        char files[MAX_FILE_COUNT][FILE_NAME_LENGTH] = {0};
-        int file_count = 0;
-        bool no_match = true;
-        m_string *match = string_init(BUFFER_SIZE);
-        ret = parse_args(argv, argc, options, pattern, files, &file_count);
-        if (ret != SUCCESS) {
-                goto cleanup;
-        }
-        for (int i = 0; i < file_count; i++) {
+/*
+解析参数->收集信息->格式整理->打印输出
+信息收集：
+信息存储再什么内？
+需要存储的三个数据：字符串，行号，和是否忽略了大小写
 
-                char *file = files[i];
-                if (file_count > 1) {
-                        printf("%s\n", file);
+
+
+
+
+*/
+
+static void init_lines(match_line (*matches)[MAX_LINE_COUNT],
+                       size_t file_count) {
+
+        for (size_t i = 0; i < file_count; i++) {
+                for (size_t j = 0; j < MAX_LINE_COUNT; j++) {
+                        string_init(&(matches[i][j].content), 1);
                 }
-                ret = collect_lines(file, pattern, options, match, &no_match);
-                if (ret != SUCCESS) {
-                        goto cleanup;
-                }
-                printf("%s", match->data);
-                clear(match);
         }
-        if (no_match)
-                exit_code = 1;
+}
+static void destroy_lines(match_line (*matches)[MAX_LINE_COUNT],
+                          size_t file_count) {
+        for (size_t i = 0; i < file_count; i++) {
+                for (size_t j = 0; j < MAX_LINE_COUNT; j++) {
+                        string_destory(&(matches[i][j].content));
+                }
+        }
+}
+int main(int argc, char *argv[]) {
+        option opt = NONE;
+        size_t file_count = 0;
+        int ret = 0;
+        char files[MAX_FILE_COUNT][FILE_NAME_SIZE] = {0};
+        char pattern[PATTERN_SIZE] = {0};
+        int res = parse_args(argv, argc, &opt, pattern, files, &file_count);
+        if (res == -1) {
+                return 2;
+        }
+        // for (size_t i = 0; i < file_count; i++) {
+        //         printf("%s\n", files[i]);
+        // }
+        match_line matches[file_count][MAX_LINE_COUNT];
+        init_lines(matches, file_count);
+        size_t match_count[file_count];
+        size_t match_count_ignore[file_count];
+        m_string output;
+        string_init(&output, BUFFER_SIZE);
+        res = collect_all(files, file_count, pattern, matches, match_count,
+                          match_count_ignore);
+        if (res == -1) {
+                ret = 2;
+                // goto cleanup;
+        }
+        res = arrange_info(opt, file_count, files, matches, &output,
+                           match_count, match_count_ignore);
+        if (res == 0 && ret < 1) {
+                ret = 1;
+        }
+        printf("%s", output.data);
 cleanup:
-        if (ret != SUCCESS) {
-                ret = handle_error(ret);
-        }
-        string_destroy(match);
-        return exit_code;
+        string_destory(&output);
+        destroy_lines(matches, file_count);
+
+        return ret;
 }

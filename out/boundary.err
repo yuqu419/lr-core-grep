@@ -1,0 +1,55 @@
+=================================================================
+==96908==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x7f5aa4801080 at pc 0x7f5aa66fb42e bp 0x7ffdb92d93b0 sp 0x7ffdb92d8b58
+READ of size 4092 at 0x7f5aa4801080 thread T0
+    #0 0x7f5aa66fb42d in memcpy ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors_memintrinsics.inc:115
+    #1 0x58071cd53bf2 in string_concat src/mstring.c:36
+    #2 0x58071cd54b4e in handle_buf src/search.c:68
+    #3 0x58071cd54e38 in collect_file src/search.c:98
+    #4 0x58071cd553da in collect_all src/search.c:134
+    #5 0x58071cd53645 in main src/lrg.c:54
+    #6 0x7f5aa622a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58
+    #7 0x7f5aa622a28a in __libc_start_main_impl ../csu/libc-start.c:360
+    #8 0x58071cd51484 in _start (/projects/lingrui/temp/lr-core-grep/lrg+0x2484) (BuildId: 263bd727cdb77e38b0e66550efd7ef01283e1848)
+
+Address 0x7f5aa4801080 is located in stack of thread T0 at offset 4224 in frame
+    #0 0x58071cd54b61 in collect_file src/search.c:77
+
+  This frame has 3 object(s):
+    [32, 40) 'line_count' (line 82)
+    [64, 88) 'single_line' (line 80)
+    [128, 4224) 'buf' (line 86) <== Memory access at offset 4224 overflows this variable
+HINT: this may be a false positive if your program uses some custom stack unwind mechanism, swapcontext or vfork
+      (longjmp and C++ exceptions *are* supported)
+SUMMARY: AddressSanitizer: stack-buffer-overflow ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors_memintrinsics.inc:115 in memcpy
+Shadow bytes around the buggy address:
+  0x7f5aa4800e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7f5aa4800e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7f5aa4800f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7f5aa4800f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7f5aa4801000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x7f5aa4801080:[f3]f3 f3 f3 f3 f3 f3 f3 f3 f3 f3 f3 f3 f3 f3 f3
+  0x7f5aa4801100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7f5aa4801180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7f5aa4801200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7f5aa4801280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x7f5aa4801300: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==96908==ABORTING
