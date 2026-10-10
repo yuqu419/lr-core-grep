@@ -1,3 +1,6 @@
+#ifndef M_STRING_H
+#define M_STRING_H
+
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -61,3 +64,4 @@ int string_clear(m_string *str);
 
 */
 int string_destory(m_string *str);
+#endif

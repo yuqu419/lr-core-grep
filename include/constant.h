@@ -1,6 +1,5 @@
-#ifndef CONTANT_H
-#define CONTANT_H
-// #include <stddef.h>
+#ifndef CONSTANT_H
+#define CONSTANT_H
 #include <stdbool.h>
 #include <stddef.h>
 #include "mstring.h"
@@ -9,9 +8,6 @@
 #define MAX_LINE_COUNT 48
 #define PATTERN_SIZE 1024
 #define BUFFER_SIZE 4096 
-
-// #define MAX_OPTION_COUNT 3
-// #define MAX_ERROR_DESCRIPTION_LENGTH 4096
 typedef enum {
     IGNORE,
     NUMBER,

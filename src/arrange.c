@@ -72,8 +72,9 @@ int set_number_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                                               strlen(files[i]));
                                 string_concat(output, ":", 1);
                         }
-                        char temp[1] = {cur.number + '0'};
-                        string_concat(output, temp, 1);
+                        char temp[20] = {0};
+                        sprintf(temp, "%lu", cur.number);
+                        string_concat(output, temp, strlen(temp));
                         string_concat(output, ":", 1);
                         string_concat(output, cur.content.data,
                                       cur.content.size);
@@ -97,8 +98,9 @@ int set_number_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                                               strlen(files[i]));
                                 string_concat(output, ":", 1);
                         }
-                        char temp[1] = {cur.number + '0'};
-                        string_concat(output, temp, 1);
+                        char temp[20] = {0};
+                        sprintf(temp, "%lu", cur.number);
+                        string_concat(output, temp, strlen(temp));
                         string_concat(output, ":", 1);
                         string_concat(output, cur.content.data,
                                       cur.content.size);
@@ -116,9 +118,10 @@ int set_count_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                         string_concat(output, files[i], strlen(files[i]));
                         string_concat(output, ":", 1);
                 }
-                char temp[1] = {match_counts[i] + '0'};
+                char temp[20] = {0};
+                sprintf(temp, "%lu", match_counts[i]);
+                string_concat(output, temp, strlen(temp));
                 matched = match_counts[i] != 0;
-                string_concat(output, temp, 1);
                 string_concat(output, "\n", 1);
         }
         return matched;
@@ -133,10 +136,11 @@ int set_count_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                         string_concat(output, files[i], strlen(files[i]));
                         string_concat(output, ":", 1);
                 }
-                char temp[1] = {match_counts_ignore[i] + '0'};
+                char temp[20] = {0};
+                sprintf(temp, "%lu", match_counts_ignore[i]);
+                string_concat(output, temp, strlen(temp));
                 matched = match_counts_ignore[i] != 0;
 
-                string_concat(output, temp, 1);
                 string_concat(output, "\n", 1);
         }
         return matched;
