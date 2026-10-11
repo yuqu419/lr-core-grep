@@ -1,2 +1,5 @@
 *.o
 *json
+*.txt
+*.log
+*.sh
