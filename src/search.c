@@ -1,5 +1,6 @@
 #include "constant.h"
 #include "error.h"
+#include "mstring.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
@@ -129,7 +130,7 @@ int collect_file(char *file, char *pattern, match_line lines[MAX_LINE_COUNT],
                 }
         }
 cleanup:
-        string_destory(&single_line);
+        string_destroy(&single_line);
         close(fd);
         return ret;
 }

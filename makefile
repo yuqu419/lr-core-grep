@@ -1,7 +1,7 @@
 # ==================== 基本配置 ====================
 CC      = gcc
-CFLAGS  = -g -fsanitize=address -I ./include
-LDFLAGS = -fsanitize=address
+CFLAGS  = -g -I ./include
+LDFLAGS = 
 TARGET  = lrg
 SRCS    = $(wildcard *.c ./src/*.c)          # 自动收集当前目录所有 .c 文件
 OBJS    = $(SRCS:.c=.o)            # utils.c -> utils.o

@@ -1,5 +1,5 @@
-#ifndef ARRAGE_H
-#define ARRAGE_H
+#ifndef ARRANGE_H
+#define ARRANGE_H
 #include "constant.h"
 int arrange_info(option opt, size_t file_count, char (*files)[FILE_NAME_SIZE],
                   match_line matches[file_count][MAX_LINE_COUNT],

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int set_none_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
+static int set_none_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                   match_line matches[file_count][MAX_LINE_COUNT],
                   m_string *output) {
         int matched = 0;
@@ -32,7 +32,7 @@ int set_none_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
         }
         return matched;
 }
-int set_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
+static int set_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                     match_line matches[file_count][MAX_LINE_COUNT],
                     m_string *output) {
         int matched = 0;
@@ -55,7 +55,7 @@ int set_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
 
         return matched;
 }
-int set_number_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
+static int set_number_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                     match_line matches[file_count][MAX_LINE_COUNT],
                     m_string *output) {
         int matched = 0;
@@ -83,7 +83,7 @@ int set_number_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
         }
         return matched;
 }
-int set_number_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
+static int set_number_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                            match_line matches[file_count][MAX_LINE_COUNT],
                            m_string *output) {
         int matched = 0;
@@ -109,7 +109,7 @@ int set_number_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
         }
         return matched;
 }
-int set_count_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
+static int set_count_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                    match_line matches[file_count][MAX_LINE_COUNT],
                    m_string *output, size_t match_counts[file_count]) {
         int matched = 0;
@@ -126,7 +126,7 @@ int set_count_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
         }
         return matched;
 }
-int set_count_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
+static int set_count_ignore_info(size_t file_count, char (*files)[FILE_NAME_SIZE],
                           match_line matches[file_count][MAX_LINE_COUNT],
                           m_string *output,
                           size_t match_counts_ignore[file_count]) {

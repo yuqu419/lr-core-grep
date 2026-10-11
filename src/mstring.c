@@ -50,7 +50,7 @@ int string_empty(m_string *str) {
     return !(str ->size);
 }
 
-int string_destory(m_string *str) {
+int string_destroy(m_string *str) {
 		free(str->data);
 		*str = (m_string){.data = NULL, .cap = 0, .size = 0};
 		return 0;

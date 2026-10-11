@@ -6,10 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/*
-调用者应保证参数均合法
-option_receiver容量为MAX_OPTION_COUNT
-*/
+
 int process_option(const char *option_deliver, char *option_receiver) {
         static int count = 0;
         const char legal_options[] = "nic";
@@ -26,17 +23,12 @@ int process_option(const char *option_deliver, char *option_receiver) {
         }
         return 0;
 }
-/*
-调用者应保证参数均合法
-pattern_receiver容量为PATTERN_LENGTH
-*/
-static void process_pattern(char *pattern_deliver, char *pattern_receiver) {
+
+static void process_pattern(const char *pattern_deliver, char *pattern_receiver) {
         size_t len = strlen(pattern_deliver);
         memcpy(pattern_receiver, pattern_deliver, len + 1);
 }
-/*
-调用者应保证参数均合法
-*/
+
 static void process_file(const char *file_deliver, char *file_receiver) {
         size_t len = strlen(file_deliver);
         memcpy(file_receiver, file_deliver, len + 1);
@@ -62,10 +54,7 @@ static void set_option_by_str(const char *opt_str, option *opt) {
         }
         return;
 }
-/*
-调用者应该保证指针全不为空
 
-*/
 int parse_args(char **argv, int argc, option *opt, char *pattern,
                char (*files)[FILE_NAME_SIZE], size_t *file_count) {
         char opt_str[4] = {0};

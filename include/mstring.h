@@ -63,5 +63,5 @@ int string_clear(m_string *str);
 释放data,并置空，size和cap置为0,成功返回0，失败返回-1
 
 */
-int string_destory(m_string *str);
+int string_destroy(m_string *str);
 #endif
