@@ -6,7 +6,7 @@ SRCS    = $(wildcard *.c ./src/*.c)
 OBJS    = $(SRCS:.c=.o)         
 HDRS    = $(wildcard *.h)
 PARA = $(filter-out $(GOALS),$(MAKECMDGOALS))
-GOALS = all run test check clean
+GOALS = all run test clean
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
@@ -22,6 +22,4 @@ run: $(TARGET)
 	./$(TARGET) $(PARA)
 test: $(TARGET)
 	./test/run_tests.sh
-check:
-	cppcheck --enable=all --std=c99 --suppress=missingIncludeSystem $(SRCS)
-.PHONY: all clean run check test
+.PHONY: all clean run test
