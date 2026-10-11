@@ -5,21 +5,16 @@
 #include "search.h"
 #include <stddef.h>
 #include <stdio.h>
-static void init_lines(match_line (*matches)[MAX_LINE_COUNT],
-                       size_t file_count) {
-
-        for (size_t i = 0; i < file_count; i++) {
-                for (size_t j = 0; j < MAX_LINE_COUNT; j++) {
-                        string_init(&(matches[i][j].content), 1);
+#include <stdlib.h>
+static void match_destroy(match_line *matches[MAX_FILE_COUNT],
+                          size_t match_cap[MAX_FILE_COUNT]) {
+        for (size_t i = 0; i < MAX_FILE_COUNT; i++) {
+                if (match_cap[i] == 0)
+                        continue;
+                for (size_t j = 0; j < match_cap[i]; j++) {
+                        string_destroy(&matches[i][j].content);
                 }
-        }
-}
-static void destroy_lines(match_line (*matches)[MAX_LINE_COUNT],
-                          size_t file_count) {
-        for (size_t i = 0; i < file_count; i++) {
-                for (size_t j = 0; j < MAX_LINE_COUNT; j++) {
-                        string_destroy(&(matches[i][j].content));
-                }
+                free(matches[i]);
         }
 }
 int main(int argc, char *argv[]) {
@@ -32,14 +27,14 @@ int main(int argc, char *argv[]) {
         if (res == -1) {
                 return 2;
         }
-        match_line matches[file_count][MAX_LINE_COUNT];
-        init_lines(matches, file_count);
-        size_t match_count[file_count];
-        size_t match_count_ignore[file_count];
+        match_line *matches[MAX_FILE_COUNT] = {0};
+        size_t match_cap[MAX_FILE_COUNT] = {0};
+        size_t match_count[MAX_FILE_COUNT] = {0};
+        size_t match_count_ignore[MAX_FILE_COUNT] = {0};
         m_string output;
         string_init(&output, BUFFER_SIZE);
         res = collect_all(files, file_count, pattern, matches, match_count,
-                          match_count_ignore);
+                          match_count_ignore, match_cap);
         if (res == -1) {
                 ret = 2;
         }
@@ -50,8 +45,8 @@ int main(int argc, char *argv[]) {
         }
         printf("%s", output.data);
 cleanup:
+        match_destroy(matches, match_cap);
         string_destroy(&output);
-        destroy_lines(matches, file_count);
 
         return ret;
 }

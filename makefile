@@ -1,12 +1,12 @@
 # ==================== 基本配置 ====================
 CC      = gcc
 CFLAGS  = -g -I ./include
-LDFLAGS = 
+LDFLAGS = -fsanitize=address
 TARGET  = lrg
 SRCS    = $(wildcard *.c ./src/*.c)          # 自动收集当前目录所有 .c 文件
 OBJS    = $(SRCS:.c=.o)            # utils.c -> utils.o
 HDRS    = $(wildcard *.h)
-PARA 	= -n n data2.txt sample.log
+PARA 	= -n n data2.txt
 # ==================== 默认目标 ====================
 all: $(TARGET)
 

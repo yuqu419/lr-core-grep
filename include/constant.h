@@ -5,7 +5,6 @@
 #include "mstring.h"
 #define FILE_NAME_SIZE 256
 #define MAX_FILE_COUNT 256
-#define MAX_LINE_COUNT 48
 #define PATTERN_SIZE 1024
 #define BUFFER_SIZE 4096 
 typedef enum {

@@ -7,8 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int process_option(const char *option_deliver, char *option_receiver) {
-        static int count = 0;
+int process_option(const char *option_deliver, char *option_receiver,size_t* count) {
         const char legal_options[] = "nic";
         for (int j = 1; option_deliver[j] != '\0'; j++) {
                 char opt = option_deliver[j];
@@ -17,14 +16,15 @@ int process_option(const char *option_deliver, char *option_receiver) {
                         return -1;
                 }
                 if (strchr(option_receiver, opt) == NULL) {
-                        option_receiver[count] = opt;
-                        count++;
+                        option_receiver[*count] = opt;
+                        (*count)++;
                 }
         }
         return 0;
 }
 
-static void process_pattern(const char *pattern_deliver, char *pattern_receiver) {
+static void process_pattern(const char *pattern_deliver,
+                            char *pattern_receiver) {
         size_t len = strlen(pattern_deliver);
         memcpy(pattern_receiver, pattern_deliver, len + 1);
 }
@@ -59,13 +59,14 @@ int parse_args(char **argv, int argc, option *opt, char *pattern,
                char (*files)[FILE_NAME_SIZE], size_t *file_count) {
         char opt_str[4] = {0};
         *file_count = 0;
+        size_t option_count = 0;
         bool pattern_exist = false;
         for (int i = 1; i < argc; i++) {
                 char *arg = argv[i];
                 if (!arg)
                         continue;
-                if (arg[0] == '-' && !pattern_exist) {
-                        int res = process_option(arg, opt_str);
+                if (arg[0] == '-' && arg[1] != '\0' && !pattern_exist) {
+                        int res = process_option(arg, opt_str,&option_count);
                         if (res == -1) {
                                 return -1;
                         }
