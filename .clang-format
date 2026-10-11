@@ -1,7 +1,7 @@
-    # .clang-format 文件内容示例
-    BasedOnStyle: LLVM
-    IndentWidth: 8          # 关键设置：缩进宽度为 8 个空格
-    TabWidth: 8             # 制表符宽度也设为 8
-    UseTab: Never           # 明确使用空格进行缩进，而非制表符
-    ColumnLimit: 80        # 可选：设置每行最大字符数，可根据需要调整
-    
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 80
+...

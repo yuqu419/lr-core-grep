@@ -1,5 +1,3 @@
 *.o
 *json
-*.txt
-*.sh
 *.out
